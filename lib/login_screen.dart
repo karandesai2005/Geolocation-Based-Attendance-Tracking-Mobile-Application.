@@ -55,6 +55,13 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: _login,
               child: Text('Login'),
             ),
+            TextButton(
+              onPressed: () {
+                // Navigate to registration screen
+                Navigator.pushNamed(context, '/register');
+              },
+              child: Text('New User? Register'),
+            ),
           ],
         ),
       ),

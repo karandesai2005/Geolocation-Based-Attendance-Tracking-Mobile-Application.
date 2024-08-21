@@ -1,7 +1,7 @@
 import 'dart:async';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 
 class AttendanceTracker {
   final double officeLatitude = 37.7749; // Replace with your office latitude
@@ -10,32 +10,84 @@ class AttendanceTracker {
 
   Position? currentPosition;
   bool isInsideOffice = false;
+  StreamSubscription<Position>? positionStreamSubscription;
 
-  // ... other variables and methods
+  Future<void> markPresent(Position position) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
 
-  void startTracking() {
-    // Request location permissions
-    Geolocator.requestPermission();
+      final attendanceData = {
+        'userId': user.uid,
+        'timestamp': FieldValue.serverTimestamp(),
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'status': 'present',
+      };
 
-    // Stream to continuously monitor location
-    Geolocator.getPositionStream().listen((position) {
-      currentPosition = position;
-      double distance = Geolocator.distanceBetween(
-        currentPosition!.latitude,
-        currentPosition!.longitude,
-        officeLatitude,
-        officeLongitude,
-      );
+      await FirebaseFirestore.instance.collection('attendance').add(attendanceData);
+    } catch (e) {
+      print('Error marking present: $e');
+    }
+  }
 
-      if (distance <= radius && !isInsideOffice) {
-        // Check-in logic
-        isInsideOffice = true;
-        // Store check-in time and location in database
-      } else if (distance > radius && isInsideOffice) {
-        // Check-out logic
-        isInsideOffice = false;
-        // Store check-out time and location in database
+  Future<void> markAbsent(Position position) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final attendanceData = {
+        'userId': user.uid,
+        'timestamp': FieldValue.serverTimestamp(),
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'status': 'absent',
+      };
+
+      await FirebaseFirestore.instance.collection('attendance').add(attendanceData);
+    } catch (e) {
+      print('Error marking absent: $e');
+    }
+  }
+
+  void startTracking() async {
+    try {
+      // Request location permissions
+      LocationPermission permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        print('Location permissions are denied');
+        return;
       }
-    });
+
+      // Stream to continuously monitor location
+      positionStreamSubscription = Geolocator.getPositionStream().listen((position) {
+        currentPosition = position;
+        double distance = Geolocator.distanceBetween(
+          currentPosition!.latitude,
+          currentPosition!.longitude,
+          officeLatitude,
+          officeLongitude,
+        );
+
+        // ... rest of your tracking logic
+
+        // Inside the if-else conditions for check-in/check-out:
+        if (distance <= radius && !isInsideOffice) {
+          // Check-in logic
+          isInsideOffice = true;
+          markPresent(currentPosition!); // Call markPresent
+        } else if (distance > radius && isInsideOffice) {
+          // Check-out logic
+          isInsideOffice = false;
+          markAbsent(currentPosition!); // Call markAbsent
+        }
+      });
+    } catch (e) {
+      print('Error starting tracking: $e');
+    }
+  }
+
+  void stopTracking() {
+    positionStreamSubscription?.cancel();
   }
 }
