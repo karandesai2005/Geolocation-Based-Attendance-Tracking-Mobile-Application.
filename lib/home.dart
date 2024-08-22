@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'attendance_tracker.dart'; // Import the AttendanceTracker class
 
-
 class HomePage extends StatefulWidget {
   final AttendanceTracker attendanceTracker;
 
@@ -23,13 +22,15 @@ class _HomePageState extends State<HomePage> {
     }
 
     // Check if permission is granted
-    if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
       setState(() {
         _isCheckingIn = true;
       });
 
       // Get current location
-      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position currentPosition = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
 
       // Calculate distance from office location (replace with your coordinates)
       double distance = Geolocator.distanceBetween(
@@ -73,8 +74,33 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _checkOut() async {
-    // Implement check-out logic (similar to _checkIn)
-    // Call a method in AttendanceTracker to mark check-out in Firestore
+    // Request location permission if not granted (similar to _checkIn)
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    // Check if permission is granted
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
+      // Get current location
+      Position currentPosition = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      // Calculate distance from office location (already implemented in _checkIn)
+
+      // Call AttendanceTracker method to mark check-out in Firestore
+      await widget.attendanceTracker.markAbsent(currentPosition);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Check-out successful!'),
+        ),
+      );
+    } else {
+      // Show error message for denied permission (already implemented in _checkIn)
+    } 
   }
 
   @override
