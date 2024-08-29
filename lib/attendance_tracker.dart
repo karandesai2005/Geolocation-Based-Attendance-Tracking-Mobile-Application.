@@ -4,8 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 
 class AttendanceTracker {
-  final double officeLatitude = 37.7749; // Replace with your office latitude
-  final double officeLongitude = -122.4194; // Replace with your office longitude
+  final double officeLatitude = 18.5412214; // Replace with your office latitude
+  final double officeLongitude = 73.7274563; // Replace with your office longitude
   final double radius = 200; // Radius in meters
 
   Position? currentPosition;
