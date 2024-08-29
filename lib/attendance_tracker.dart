@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 
 class AttendanceTracker {
-  final double officeLatitude = 73.7274563; // Replace with your office latitude
-  final double officeLongitude = 18.5412214; // Replace with your office longitude
-  final double radius = 2000; // Radius in meters
+  final double officeLatitude = 18.5412214;  
+  final double officeLongitude = 73.7274563;
+  final double radius = 200000; // Radius in meters
 
   Position? currentPosition;
   bool isInsideOffice = false;
@@ -72,22 +72,23 @@ class AttendanceTracker {
         // ... rest of your tracking logic
 
         // Inside the if-else conditions for check-in/check-out:
-        if (distance <= radius && !isInsideOffice) {
-          // Check-in logic
-          isInsideOffice = true;
-          markPresent(currentPosition!); // Call markPresent
-        } else if (distance > radius && isInsideOffice) {
-          // Check-out logic
-          isInsideOffice = false;
-          markAbsent(currentPosition!); // Call markAbsent
-        }
-      });
-    } catch (e) {
-      print('Error starting tracking: $e');
+          if (distance <= radius && !isInsideOffice) {
+            // Check-in logic
+            isInsideOffice = true;
+            markPresent(currentPosition!); // Call markPresent
+          } else if (distance > radius && isInsideOffice) {
+            // Check-out logic
+            isInsideOffice = false;
+            markAbsent(currentPosition!); // Call markAbsent
+          }
+        });
+      } catch (e) {
+        print('Error starting tracking: $e');
+      }
+    }
+
+    void stopTracking() {
+      positionStreamSubscription?.cancel();
     }
   }
-
-  void stopTracking() {
-    positionStreamSubscription?.cancel();
-  }
-}
+  

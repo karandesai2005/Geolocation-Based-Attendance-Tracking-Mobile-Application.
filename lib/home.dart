@@ -36,12 +36,12 @@ class _HomePageState extends State<HomePage> {
       double distance = Geolocator.distanceBetween(
         currentPosition.latitude,
         currentPosition.longitude,
-        37.7749, // Replace with your office latitude
-        -122.4194, // Replace with your office longitude
+        18.5412214, // Replace with your office latitude
+        73.7274563, // Replace with your office longitude
       );
 
       // Check if user is within the radius
-      if (distance <= 200) {
+      if (distance <= 20000) {
         // Mark user as present in Firestore (implementation in AttendanceTracker)
         widget.attendanceTracker.markPresent(currentPosition);
 
