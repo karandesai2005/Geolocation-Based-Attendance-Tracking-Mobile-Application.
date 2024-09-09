@@ -23,6 +23,8 @@ class AttendanceTracker {
         'latitude': position.latitude,
         'longitude': position.longitude,
         'status': 'present',
+        'checkedIn': FieldValue.serverTimestamp(),
+        'checkedOut': null, // Initially set to null
       };
 
       await FirebaseFirestore.instance.collection('attendance').add(attendanceData);
@@ -31,24 +33,49 @@ class AttendanceTracker {
     }
   }
 
-  Future<void> markAbsent(Position position) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+Future<void> markAbsent(Position position) async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-      final attendanceData = {
-        'userId': user.uid,
-        'timestamp': FieldValue.serverTimestamp(),
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'status': 'absent',
-      };
+    // Find the latest attendance record for the user
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('attendance')
+        .where('userId', isEqualTo: user.uid)
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
 
-      await FirebaseFirestore.instance.collection('attendance').add(attendanceData);
-    } catch (e) {
-      print('Error marking absent: $e');
+    if (querySnapshot.docs.isNotEmpty) {
+      final attendanceDoc = querySnapshot.docs.first;
+      final attendanceData = attendanceDoc.data();
+
+      // Check if 'checkedIn' field exists and has a value
+      if (attendanceData.containsKey('checkedIn') && attendanceData['checkedIn'] != null) {
+        final checkedInTimestamp = attendanceData['checkedIn'] as Timestamp;
+
+        // Update the checkedOut time and calculate work time
+        attendanceData['checkedOut'] = FieldValue.serverTimestamp();
+        attendanceData['workTime'] = calculateWorkTime(checkedInTimestamp, attendanceData['checkedOut']);
+
+        await attendanceDoc.reference.update(attendanceData);
+      } else {
+        // Handle case where 'checkedIn' is missing
+        print("Error: 'checkedIn' field not found or null in attendance record");
+      }
+    } else {
+      // Handle case where there's no existing attendance record
+      // You might want to log an error or take other actions
     }
+  } catch (e) {
+    print('Error marking absent: $e');
   }
+}
+double calculateWorkTime(Timestamp checkInTimestamp, Timestamp checkOutTimestamp) {
+  final duration = checkOutTimestamp.toDate().difference(checkInTimestamp.toDate());
+  final workHours = duration.inHours.toDouble();
+  return workHours;
+}
 
   void startTracking() async {
     try {

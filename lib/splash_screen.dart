@@ -9,7 +9,7 @@ class MySplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedSplash(
       type: Transition.fade, // Replace with your logo image
-      backgroundColor: Colors.white, // Use backgroundColor for background color
+      backgroundColor: const Color.fromARGB(255, 22, 48, 136), // Use backgroundColor for background color
       durationInSeconds: 3, // Splash screen duration in seconds
       navigator: LoginScreen(), // Choose your transition type (fade, size, slide)
       child: Image.asset("assets/my_logo.png"), // Navigate to the login screen after splash
