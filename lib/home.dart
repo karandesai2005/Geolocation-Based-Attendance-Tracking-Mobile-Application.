@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'attendance_tracker.dart'; // Import the AttendanceTracker class
+import 'login_screen.dart'; // Import the LoginScreen class
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatefulWidget {
   final AttendanceTracker attendanceTracker;
 
-  const HomePage({Key? key, required this.attendanceTracker}) : super(key: key);
+  const HomePage({super.key, required this.attendanceTracker});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -13,6 +16,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isCheckingIn = false; // Flag to indicate check-in process
+  final List<AttendanceData> _attendanceHistory = []; // List to store attendance history
 
   Future<void> _checkIn() async {
     // Request location permission if not granted
@@ -45,28 +49,36 @@ class _HomePageState extends State<HomePage> {
         // Mark user as present in Firestore (implementation in AttendanceTracker)
         widget.attendanceTracker.markPresent(currentPosition);
 
+        // Add attendance data to history
+        _attendanceHistory.add(
+          AttendanceData(
+            status: 'present',
+            timestamp: FieldValue.serverTimestamp(),
+            latitude: currentPosition.latitude,
+            longitude: currentPosition.longitude,
+          ),
+        );
+
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Check-in successful!'),
           ),
         );
       } else {
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('You are not within the office radius.'),
           ),
         );
       }
 
-      setState(() {
-        _isCheckingIn = false;
-      });
+      setState(() {});
     } else {
       // Show error message for denied permission
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Location permission is required for check-in.'),
         ),
       );
@@ -92,9 +104,19 @@ class _HomePageState extends State<HomePage> {
       // Call AttendanceTracker method to mark check-out in Firestore
       await widget.attendanceTracker.markAbsent(currentPosition);
 
+      // Add attendance data to history
+      _attendanceHistory.add(
+        AttendanceData(
+          status: 'absent',
+          timestamp: FieldValue.serverTimestamp(),
+          latitude: currentPosition.latitude,
+          longitude: currentPosition.longitude,
+        ),
+      );
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Check-out successful!'),
         ),
       );
@@ -107,24 +129,69 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              // Log out the user and navigate to login screen
+              FirebaseAuth.instance.signOut().then((_) {
+                Navigator.pushReplacementNamed(context, '/login');
+              });
+            },
+          ),
+        ],
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Text(
+              widget.attendanceTracker.isInsideOffice ? 'Checked In' : 'Checked Out',
+              style: const TextStyle(fontSize: 18.0),
+            ),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isCheckingIn ? null : _checkIn,
               child: Text(_isCheckingIn ? 'Checking In...' : 'Check In'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => _checkOut(), // Implement checkOut logic
-              child: Text('Check Out'),
+              onPressed: widget.attendanceTracker.isInsideOffice ? null : _checkOut,
+              child: const Text('Check Out'),
+            ),
+            const SizedBox(height: 20),
+            const Text('Attendance History:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _attendanceHistory.length,
+                itemBuilder: (context, index) {
+                  final attendance = _attendanceHistory[index];
+                  return ListTile(
+                    title: Text('Status: ${attendance.status}'),
+                    subtitle: Text('Timestamp: ${attendance.timestamp}'),
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+// Define a class to represent attendance data
+class AttendanceData {
+  final String status;
+  final FieldValue timestamp;
+  final double latitude;
+  final double longitude;
+
+  AttendanceData({
+    required this.status,
+    required this.timestamp,
+    required this.latitude,
+    required this.longitude,
+  });
 }

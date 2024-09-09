@@ -158,6 +158,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_animated_splash:
+    dependency: "direct main"
+    description:
+      name: flutter_animated_splash
+      sha256: "25e823a679d13aee69df345b9059cfdc4404d5ebce0aa5eaa11efe9dfae272c6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.10"
   flutter_lints:
     dependency: "direct dev"
     description:

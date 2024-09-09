@@ -37,6 +37,7 @@ dependencies:
   geocoding: ^2.0.4
   location_permissions: 4.0.1
   cupertino_icons: ^1.0.8
+  flutter_animated_splash: ^0.0.10
 
 dev_dependencies:
   flutter_test:
@@ -61,8 +62,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+      - assets/my_logo.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
