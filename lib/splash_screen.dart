@@ -11,7 +11,7 @@ class MySplashScreen extends StatelessWidget {
       type: Transition.fade, // Replace with your logo image
       backgroundColor: const Color.fromARGB(255, 22, 48, 136), // Use backgroundColor for background color
       durationInSeconds: 3, // Splash screen duration in seconds
-      navigator: LoginScreen(), // Choose your transition type (fade, size, slide)
+      navigator: const LoginScreen(), // Choose your transition type (fade, size, slide)
       child: Image.asset("assets/my_logo.png"), // Navigate to the login screen after splash
     );
   }

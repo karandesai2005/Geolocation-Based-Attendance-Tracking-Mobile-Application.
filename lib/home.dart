@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'attendance_tracker.dart'; // Import the AttendanceTracker class
-import 'login_screen.dart'; // Import the LoginScreen class
+// Import the LoginScreen class
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -122,7 +122,7 @@ class _HomePageState extends State<HomePage> {
       );
     } else {
       // Show error message for denied permission (already implemented in _checkIn)
-    } 
+    }
   }
 
   @override
@@ -146,9 +146,9 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            Text(
-              widget.attendanceTracker.isInsideOffice ? 'Checked In' : 'Checked Out',
-              style: const TextStyle(fontSize: 18.0),
+            const Text(
+              'Please Check In',
+              style: TextStyle(fontSize: 18.0),
             ),
             const SizedBox(height: 20),
             ElevatedButton(

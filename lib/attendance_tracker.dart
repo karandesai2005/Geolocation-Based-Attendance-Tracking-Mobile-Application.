@@ -48,14 +48,16 @@ Future<void> markAbsent(Position position) async {
 
     if (querySnapshot.docs.isNotEmpty) {
       final attendanceDoc = querySnapshot.docs.first;
-      final attendanceData = attendanceDoc.data();
+      final attendanceData = attendanceDoc.data(); 
 
       // Check if 'checkedIn' field exists and has a value
       if (attendanceData.containsKey('checkedIn') && attendanceData['checkedIn'] != null) {
         final checkedInTimestamp = attendanceData['checkedIn'] as Timestamp;
 
-        // Update the checkedOut time and calculate work time
+        // Update the checkedOut time with the server timestamp directly
         attendanceData['checkedOut'] = FieldValue.serverTimestamp();
+
+        // Calculate work time 
         attendanceData['workTime'] = calculateWorkTime(checkedInTimestamp, attendanceData['checkedOut']);
 
         await attendanceDoc.reference.update(attendanceData);
@@ -65,18 +67,27 @@ Future<void> markAbsent(Position position) async {
       }
     } else {
       // Handle case where there's no existing attendance record
-      // You might want to log an error or take other actions
     }
   } catch (e) {
     print('Error marking absent: $e');
   }
 }
-double calculateWorkTime(Timestamp checkInTimestamp, Timestamp checkOutTimestamp) {
-  final duration = checkOutTimestamp.toDate().difference(checkInTimestamp.toDate());
-  final workHours = duration.inHours.toDouble();
-  return workHours;
-}
 
+double calculateWorkTime(Timestamp checkInTimestamp, dynamic checkOutTimestamp) {
+  if (checkOutTimestamp is FieldValue) {
+    // Handle the case where checkOutTimestamp is still a FieldValue
+    // You might want to return 0 or some other default value for now
+    return 0; 
+  } else if (checkOutTimestamp is Timestamp) {
+    final duration = checkOutTimestamp.toDate().difference(checkInTimestamp.toDate());
+    final workHours = duration.inHours.toDouble();
+    return workHours;
+  } else {
+    // Handle other unexpected types if necessary
+    return 0;
+  }
+}
+  
   void startTracking() async {
     try {
       // Request location permissions
@@ -95,9 +106,6 @@ double calculateWorkTime(Timestamp checkInTimestamp, Timestamp checkOutTimestamp
           officeLatitude,
           officeLongitude,
         );
-
-        // ... rest of your tracking logic
-
         // Inside the if-else conditions for check-in/check-out:
           if (distance <= radius && !isInsideOffice) {
             // Check-in logic

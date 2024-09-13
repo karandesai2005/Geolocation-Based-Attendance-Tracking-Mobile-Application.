@@ -4,7 +4,7 @@ import 'attendance_tracker.dart'; // Import AttendanceTracker
 import 'login_screen.dart';
 import 'register_screen.dart';
 import 'home.dart';
-import 'splash_screen.dart'; // Import the splash screen widget
+// Import the splash screen widget
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,9 +25,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: MySplashScreen(), // Initial route is the splash screen
+      home: const LoginScreen(), // Initial route is the splash screen
       routes: {
-        '/register': (context) => RegisterScreen(),
+        '/register': (context) => const RegisterScreen(),
         '/home': (context) => HomePage(attendanceTracker: attendanceTracker), // Pass attendanceTracker instance
       },
     );
